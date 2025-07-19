@@ -3,7 +3,6 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import urllib.parse
-
 # Load data
 from quiver_scraper import fetch_quiver_trades
 df = fetch_quiver_trades()
