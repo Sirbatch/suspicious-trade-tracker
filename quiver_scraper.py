@@ -2,6 +2,7 @@
 import requests
 import pandas as pd
 from bs4 import BeautifulSoup
+import numpy as np
 
 def fetch_quiver_trades():
     url = "https://www.quiverquant.com/congresstrading"
@@ -27,5 +28,9 @@ def fetch_quiver_trades():
                 "Sector": cols[5].get_text(strip=True),
             }
             trades.append(trade)
+            
 
-    return pd.DataFrame(trades)
+   df = pd.DataFrame(trades)
+df["Suspicious Score"] = np.random.uniform(0.0, 1.0, size=len(df))
+return df
+
