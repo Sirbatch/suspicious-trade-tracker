@@ -1,4 +1,3 @@
-
 import requests
 import pandas as pd
 from bs4 import BeautifulSoup
@@ -28,9 +27,8 @@ def fetch_quiver_trades():
                 "Sector": cols[5].get_text(strip=True),
             }
             trades.append(trade)
-            
 
-   df = pd.DataFrame(trades)
-df["Suspicious Score"] = np.random.uniform(0.0, 1.0, size=len(df))
-return df
+    df = pd.DataFrame(trades)
+    df["Suspicious Score"] = np.random.uniform(0.0, 1.0, size=len(df))
+    return df
 
