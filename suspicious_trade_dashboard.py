@@ -1,9 +1,11 @@
-
 import streamlit as st
 import pandas as pd
 import plotly.express as px
 import urllib.parse
+
 from quiver_scraper import fetch_quiver_trades
+
+# Load data
 df = fetch_quiver_trades()
 df["Trade Date"] = pd.to_datetime(df["Trade Date"], errors="coerce")
 
@@ -34,17 +36,9 @@ st.subheader("Trade Data")
 def create_news_link(row):
     base = "https://www.google.com/search?q="
     query = f"{row['Politician']} {row['Stock']} news {row['Trade Date']}"
-    return f"[🔎 News]({base + urllib.parse.quote_plus(query)})"
+    return f"[📰 News]({base + urllib.parse.quote_plus(query)})"
 
 df["News"] = df.apply(create_news_link, axis=1)
 display_df = df[["Politician", "Stock", "Trade Type", "Trade Date", "Amount", "Sector", "Suspicious Score", "News"]]
 
 st.dataframe(display_df, use_container_width=True)
-
-# --- Download Button ---
-st.download_button(
-    label="Download Filtered Data",
-    data=display_df.to_csv(index=False).encode("utf-8"),
-    file_name="filtered_trades.csv",
-    mime="text/csv"
-)
