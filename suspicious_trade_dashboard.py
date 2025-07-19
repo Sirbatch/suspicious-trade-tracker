@@ -5,7 +5,9 @@ import plotly.express as px
 import urllib.parse
 
 # Load data
-df = pd.read_excel("Suspicious_Trade_Tracker_Report.xlsx")
+from quiver_scraper import fetch_quiver_trades
+df = fetch_quiver_trades()
+df["Trade Date"] = pd.to_datetime(df["Trade Date"], errors="coerce")
 
 st.title("Suspicious Congressional Trade Tracker")
 
