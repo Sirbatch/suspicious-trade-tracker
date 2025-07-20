@@ -1,11 +1,11 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt  # <-- NEW
 
 from ingest.quiver import fetch_quiver_trades, QuiverIngestionError
 from scoring.model import compute_scores
 from enrich.tickers import normalize_tickers
-from enrich.news import enrich_news   # You added the NewsAPI version
+from enrich.news import enrich_news  # NewsAPI enrichment
 
 st.set_page_config(page_title="Congressional Suspicious Trade Tracker", layout="wide")
 st.title("🕵️ Congressional Suspicious Trade Tracker")
@@ -26,6 +26,7 @@ if df_raw.empty:
     st.warning("No trade data parsed. Site layout may have changed or no recent trades.")
     st.stop()
 
+# --------------------------------------------------------------------- enrichment
 with st.spinner("Normalizing tickers..."):
     df_enriched = normalize_tickers(df_raw)
 
@@ -34,7 +35,7 @@ with st.spinner("Fetching related news (if NEWSAPI_KEY set)..."):
 
 df_scored = compute_scores(df_enriched)
 
-# Sidebar Filters -----------------------------------------------------------
+# --------------------------------------------------------------------- sidebar filters
 st.sidebar.header("Filters")
 sectors = ["All"] + sorted([s for s in df_scored['Sector'].dropna().unique()])
 sector_choice = st.sidebar.selectbox("Sector", sectors, index=0)
@@ -51,7 +52,7 @@ if 'trade_date' in df_scored.columns and not df_scored['trade_date'].isna().all(
 else:
     date_range = None
 
-# Apply Filters -------------------------------------------------------------
+# --------------------------------------------------------------------- apply filters
 filtered = df_scored.copy()
 if sector_choice != "All":
     filtered = filtered[filtered['Sector'] == sector_choice]
@@ -63,32 +64,32 @@ if date_range and len(date_range) == 2:
     mask = (filtered['trade_date'].dt.date >= start_d) & (filtered['trade_date'].dt.date <= end_d)
     filtered = filtered[mask]
 
-# KPI Metrics ---------------------------------------------------------------
+# --------------------------------------------------------------------- KPI metrics
 col1, col2, col3, col4 = st.columns(4)
 col1.metric("Total Trades", f"{len(df_scored):,}")
 col2.metric("Filtered Trades", f"{len(filtered):,}")
 col3.metric("Unique Politicians", filtered['Politician'].nunique())
 col4.metric("Avg Score (Filtered)", f"{filtered['score'].mean():.1f}" if len(filtered) else '-')
 
-# Charts --------------------------------------------------------------------
+# --------------------------------------------------------------------- charts
 if not filtered.empty:
     counts = filtered['Politician'].value_counts().head(20).sort_values(ascending=True)
     st.subheader("Top Politicians by Trade Count (Filtered)")
     st.bar_chart(counts)
 
     st.subheader("Score Distribution (Filtered)")
-st.caption("Histogram of suspicious scores (filtered set).")
+    st.caption("Histogram of suspicious scores (filtered set).")
 
-if len(filtered):
+    # ---------- NEW histogram with matplotlib
     fig, ax = plt.subplots()
     ax.hist(filtered["score"], bins=20, edgecolor="black")
     ax.set_xlabel("Suspicious Score")
     ax.set_ylabel("Trades")
     st.pyplot(fig)
 else:
-    st.info("No data to plot.")
+    st.info("No trades match current filters.")
 
-# Data Table ----------------------------------------------------------------
+# --------------------------------------------------------------------- data table
 st.subheader("Trades")
 show_cols = [c for c in [
     'scrape_ts', 'Politician', 'ticker', 'stock_clean', 'Sector', 'Trade Type', 'Trade Date',
@@ -100,7 +101,7 @@ show_cols = [c for c in [
 
 st.dataframe(filtered[show_cols].sort_values('score', ascending=False), use_container_width=True)
 
-# Detail Panel --------------------------------------------------------------
+# --------------------------------------------------------------------- detail panel
 if not filtered.empty:
     st.markdown("### Trade Detail")
     selected_idx = st.selectbox("Select a trade for detail", filtered.index.tolist())
@@ -122,7 +123,7 @@ if not filtered.empty:
         else:
             st.caption("No headlines (missing key, none found, or no matching articles).")
 
-# Export --------------------------------------------------------------------
+# --------------------------------------------------------------------- export
 if not filtered.empty:
     st.download_button(
         "Download Filtered Trades (CSV)",
@@ -131,7 +132,7 @@ if not filtered.empty:
         mime="text/csv"
     )
 
-# Debug / Metadata ----------------------------------------------------------
+# --------------------------------------------------------------------- debug
 with st.expander("Debug / Metadata"):
     st.write({
         'header_hash_unique': df_raw['header_hash'].unique().tolist(),
