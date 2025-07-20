@@ -2,6 +2,7 @@ streamlit
 pandas
 requests
 beautifulsoup4
+matplotlib
 lxml
 numpy
 rapidfuzz        # for future fuzzy-ticker matching
