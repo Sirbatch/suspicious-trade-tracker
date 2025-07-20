@@ -1,7 +1,8 @@
 streamlit
 pandas
-plotly
 beautifulsoup4
 requests
-numpy
+plotly
+yfinance
 openpyxl
+numpy
