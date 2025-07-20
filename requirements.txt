@@ -1,8 +1,10 @@
 streamlit
 pandas
-beautifulsoup4
 requests
-plotly
-yfinance
-openpyxl
+beautifulsoup4
+lxml
 numpy
+rapidfuzz        # for future fuzzy-ticker matching
+yfinance         # optional ticker lookup
+newsapi-python   # NewsAPI helper (you’re calling the REST API directly, but handy)
+python-dotenv    # load env vars from a .env file if you wish
