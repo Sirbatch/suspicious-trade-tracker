@@ -1,7 +1,8 @@
 import requests
 import pandas as pd
-from bs4 import BeautifulSoup
 import numpy as np
+from bs4 import BeautifulSoup
+import yfinance as yf
 
 def fetch_quiver_trades():
     url = "https://www.quiverquant.com/congresstrading"
@@ -14,7 +15,7 @@ def fetch_quiver_trades():
     if not table:
         return pd.DataFrame()
 
-    rows = table.find_all("tr")[1:]  # skip header
+    rows = table.find_all("tr")[1:]
     for row in rows:
         cols = row.find_all("td")
         if len(cols) >= 6:
@@ -29,6 +30,30 @@ def fetch_quiver_trades():
             trades.append(trade)
 
     df = pd.DataFrame(trades)
-    df["Suspicious Score"] = np.random.uniform(0.0, 1.0, size=len(df))
-    return df
 
+    def resolve_ticker(name):
+        try:
+            ticker = yf.Ticker(name.split()[0]).info.get("symbol")
+            return ticker if ticker else name
+        except:
+            return name
+
+    df["Resolved Ticker"] = df["Stock"].apply(resolve_ticker)
+
+    def compute_suspicious_score(row):
+        score = 0.0
+        if "$15,000" in row["Amount"]:
+            score += 0.3
+        elif "$50,000" in row["Amount"]:
+            score += 0.5
+        elif "$100,000" in row["Amount"]:
+            score += 0.7
+
+        volatile_sectors = ["Technology", "Healthcare", "Energy"]
+        if row["Sector"] in volatile_sectors:
+            score += 0.2
+
+        return min(score, 1.0)
+
+    df["Suspicious Score"] = df.apply(compute_suspicious_score, axis=1)
+    return df
