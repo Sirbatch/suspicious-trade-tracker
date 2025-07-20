@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import matplotlib.pyplot as plt
 
 from ingest.quiver import fetch_quiver_trades, QuiverIngestionError
 from scoring.model import compute_scores
@@ -76,10 +77,16 @@ if not filtered.empty:
     st.bar_chart(counts)
 
     st.subheader("Score Distribution (Filtered)")
-    st.caption("Vertical line shows lower bound of selected score range.")
-    st.histogram(filtered['score'], bins=20)
+st.caption("Histogram of suspicious scores (filtered set).")
+
+if len(filtered):
+    fig, ax = plt.subplots()
+    ax.hist(filtered["score"], bins=20, edgecolor="black")
+    ax.set_xlabel("Suspicious Score")
+    ax.set_ylabel("Trades")
+    st.pyplot(fig)
 else:
-    st.info("No trades match current filters.")
+    st.info("No data to plot.")
 
 # Data Table ----------------------------------------------------------------
 st.subheader("Trades")
